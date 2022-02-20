@@ -95,3 +95,11 @@ curl --location --request POST 'http://localhost:8080/recipes' \
    ]
 }' | jq -r
 ``` 
+
+### GETting a list of recipes
+
+Get a list of recipes by ``http://localhost:8080/recipes``. Or using ``cURL``:
+``` 
+curl -s --location --request GET 'http://localhost:8080/recipes' \
+--header 'Content-Type: application/json'
+``` 
