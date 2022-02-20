@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<con:soapui-project id="75f8b0d3-2d03-41a7-827d-b87a2d226c90" activeEnvironment="Default" name="Go Recipes" resourceRoot="" soapui-version="5.7.0" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:interface xsi:type="con:RestService" id="77e51139-40f4-44b3-a02a-7befe2cbcdda" wadlVersion="http://wadl.dev.java.net/2009/02" name="http://localhost:8080" type="rest" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings/><con:definitionCache/><con:endpoints><con:endpoint>http://localhost:8080</con:endpoint></con:endpoints><con:resource name="Recipes" path="/recipes" id="3ad542e4-cf2f-4a27-ae78-5262bd521bc6"><con:settings/><con:parameters/><con:method name="Recipes 1" id="b0729a16-2c21-43f7-bbb3-1e60c2f53d58" method="POST"><con:settings/><con:parameters/><con:representation type="FAULT"><con:mediaType>text/plain</con:mediaType><con:status>404</con:status><con:params/><con:element>data</con:element></con:representation><con:representation type="REQUEST"><con:mediaType>application/json</con:mediaType><con:params/></con:representation><con:representation type="RESPONSE"><con:mediaType>application/json; charset=utf-8</con:mediaType><con:status>200</con:status><con:params/><con:element xmlns:rec="http://localhost/recipes">rec:Response</con:element></con:representation><con:request name="Request 1" id="b9ad9b00-6366-46fc-bd54-72df235578be" mediaType="application/json" postQueryString="false"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://localhost:8080</con:endpoint><con:request>{
+<con:soapui-project id="75f8b0d3-2d03-41a7-827d-b87a2d226c90" activeEnvironment="Default" name="Go Recipes" resourceRoot="" soapui-version="5.7.0" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:interface xsi:type="con:RestService" id="77e51139-40f4-44b3-a02a-7befe2cbcdda" wadlVersion="http://wadl.dev.java.net/2009/02" name="http://localhost:8080" type="rest" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings/><con:definitionCache/><con:endpoints><con:endpoint>http://localhost:8080</con:endpoint></con:endpoints><con:resource name="Create recipe" path="/recipes" id="3ad542e4-cf2f-4a27-ae78-5262bd521bc6"><con:settings/><con:parameters/><con:method name="Recipes 1" id="b0729a16-2c21-43f7-bbb3-1e60c2f53d58" method="POST"><con:settings/><con:parameters/><con:representation type="FAULT"><con:mediaType>text/plain</con:mediaType><con:status>404</con:status><con:params/><con:element>data</con:element></con:representation><con:representation type="REQUEST"><con:mediaType>application/json</con:mediaType><con:params/></con:representation><con:representation type="RESPONSE"><con:mediaType>application/json; charset=utf-8</con:mediaType><con:status>200</con:status><con:params/><con:element xmlns:rec="http://localhost/recipes">rec:Response</con:element></con:representation><con:request name="Request 1" id="b9ad9b00-6366-46fc-bd54-72df235578be" mediaType="application/json" postQueryString="false"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://localhost:8080</con:endpoint><con:request>{
   "name": "Stefans Käsekuchen",
   "tags": ["Kuchen", "Nachtisch", "Freiburg"],
   "ingredients": [
@@ -14,4 +14,38 @@
     "Puddingmasse einfüllen",
     "Kuchen backen"
   ]
-}</con:request><con:originalUri>http://localhost/recipes</con:originalUri><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:request></con:method></con:resource></con:interface><con:properties/><con:wssContainer/><con:oAuth2ProfileContainer/><con:oAuth1ProfileContainer/></con:soapui-project>
+}</con:request><con:originalUri>http://localhost/recipes</con:originalUri><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:request></con:method></con:resource><con:resource name="List recipes" path="/recipes" id="ff78dd9d-a01b-4352-8b81-e4996098ac76"><con:settings/><con:parameters/><con:method name="Method 1" id="19869f30-c5df-4753-aaae-a15b17bc05fd" method="GET"><con:settings/><con:parameters/><con:representation type="FAULT"><con:mediaType>text/plain</con:mediaType><con:status>404</con:status><con:params/><con:element>data</con:element></con:representation><con:representation type="RESPONSE"><con:mediaType>application/json; charset=utf-8</con:mediaType><con:status>200</con:status><con:params/><con:element>Response</con:element></con:representation><con:request name="Request 1" id="ae053b1e-0983-4b1e-b5ef-18b08a832a13" mediaType="application/json"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://localhost:8080</con:endpoint><con:request/><con:originalUri>http://localhost/recipes</con:originalUri><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:request></con:method></con:resource><con:resource name="Update recipe" path="/recipes/{id}" id="6a47c77c-5a22-433e-857c-243ae314b676"><con:settings/><con:parameters><con:parameter required="true"><con:name>id</con:name><con:value>c0283p3d0cvuglq85lrg</con:value><con:style>TEMPLATE</con:style><con:default>c0283p3d0cvuglq85lrg</con:default><con:description xsi:nil="true"/></con:parameter></con:parameters><con:method name="Method 1" id="e8df7493-d727-451a-a8fe-fd11c0478c9e" method="PUT"><con:settings/><con:parameters/><con:representation type="REQUEST"><con:mediaType>application/json</con:mediaType><con:params/></con:representation><con:representation type="FAULT"><con:mediaType>text/plain</con:mediaType><con:status>404</con:status><con:params/><con:element>data</con:element></con:representation><con:representation type="RESPONSE"><con:mediaType>application/json; charset=utf-8</con:mediaType><con:status>200</con:status><con:params/><con:element xmlns:rec="http://localhost/recipes/">rec:Response</con:element></con:representation><con:representation type="FAULT"><con:mediaType>application/json; charset=utf-8</con:mediaType><con:status>404</con:status><con:params/><con:element xmlns:rec="http://localhost/recipes/">rec:Fault</con:element></con:representation><con:request name="Request 1" id="f569d911-9890-49fc-a17c-036ed1762cf9" mediaType="application/json" postQueryString="false"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://localhost:8080</con:endpoint><con:request>{
+      "id": "c0283p3d0cvuglq85lrg",
+      "name": "Tex-mex rice and black eyed peas",
+      "tags":       [
+         "vegetarian",
+         "main"
+      ],
+      "ingredients":       [
+         "1 cup uncooked brown rice\_r",
+         "1 tbsp extra-virgin olive oil\_r",
+         "1 cup fresh salsa, plus more for topping\_r",
+         "1/2 tsp ground cumin\_r",
+         "2 14oz cans black-eyed peas, 1 undrained; 1 drained and rinsed\_r",
+         "3 cup baby spinach\_r",
+         "1/4 cup fresh cilantro, chopped\_r",
+         "1 avocado, halved, pitted and sliced\_r",
+         "1 cup shredded cheddar cheese\_r",
+         "Sour cream or Greek yogurt, for serving (optional)"
+      ],
+      "instructions":       [
+         "1",
+         " Cook the rice as the label directs",
+         " Meanwhile, heat the olive oil in a medium saucepan over medium-high heat",
+         " Add the salsa and cumin and cook, stirring, until the salsa is soft, about 5 minutes",
+         " Add the black-eyed peas, plus the liquid from one of the cans and 1/4 cup water",
+         " Cook, stirring occasionally, until the beans are creamy and tender, about 12 minutes",
+         "\_r\n\_r\n2",
+         " Fluff the rice with a fork and divide among bowls",
+         " Add the spinach and cilantro to the black-eyed pea mixture and stir until wilted, about 1 minute; spoon evenly over the rice",
+         " Top each serving with a few avocado slices, some cheese and more salsa",
+         " Serve with sour cream or Greek yogurt, if desired",
+         ""
+      ],
+      "publishedAt": "2021-01-17T19:28:52.803845+01:00"
+   }</con:request><con:originalUri>http://localhost/recipes/</con:originalUri><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/><con:parameterOrder><con:entry>id</con:entry></con:parameterOrder></con:request></con:method></con:resource></con:interface><con:properties/><con:wssContainer/><con:oAuth2ProfileContainer/><con:oAuth1ProfileContainer/></con:soapui-project>
