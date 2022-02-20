@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project id="75f8b0d3-2d03-41a7-827d-b87a2d226c90" activeEnvironment="Default" name="Go Recipes" resourceRoot="" soapui-version="5.7.0" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:interface xsi:type="con:RestService" id="77e51139-40f4-44b3-a02a-7befe2cbcdda" wadlVersion="http://wadl.dev.java.net/2009/02" name="http://localhost:8080" type="rest" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings/><con:definitionCache/><con:endpoints><con:endpoint>http://localhost:8080</con:endpoint></con:endpoints><con:resource name="Recipes" path="/recipes" id="3ad542e4-cf2f-4a27-ae78-5262bd521bc6"><con:settings/><con:parameters/><con:method name="Recipes 1" id="b0729a16-2c21-43f7-bbb3-1e60c2f53d58" method="POST"><con:settings/><con:parameters/><con:representation type="FAULT"><con:mediaType>text/plain</con:mediaType><con:status>404</con:status><con:params/><con:element>data</con:element></con:representation><con:representation type="REQUEST"><con:mediaType>application/json</con:mediaType><con:params/></con:representation><con:representation type="RESPONSE"><con:mediaType>application/json; charset=utf-8</con:mediaType><con:status>200</con:status><con:params/><con:element xmlns:rec="http://localhost/recipes">rec:Response</con:element></con:representation><con:request name="Request 1" id="b9ad9b00-6366-46fc-bd54-72df235578be" mediaType="application/json" postQueryString="false"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://localhost:8080</con:endpoint><con:request>{
+  "name": "Stefans Käsekuchen",
+  "tags": ["Kuchen", "Nachtisch", "Freiburg"],
+  "ingredients": [
+    "500g Sahnequark",
+    "200g Sahne",
+    "2 Eier"
+  ],
+  "instructions": [
+    "Zunächst den Mürbteig zubereiten",
+    "Puddingmasse zubereiten",
+    "Teig in Form bringen",
+    "Puddingmasse einfüllen",
+    "Kuchen backen"
+  ]
+}</con:request><con:originalUri>http://localhost/recipes</con:originalUri><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:request></con:method></con:resource></con:interface><con:properties/><con:wssContainer/><con:oAuth2ProfileContainer/><con:oAuth1ProfileContainer/></con:soapui-project>
