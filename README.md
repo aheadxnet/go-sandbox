@@ -112,4 +112,6 @@ Delete a recipe by ``http://localhost:8080/recipes/{id}``.
 ```
 curl -v -sX DELETE http://localhost:8080/recipes/c0283p3d0cvuglq85log | jq -r
 ```
-    
+
+### GETting all recipes with a given tag
+Searching for recipes with a given tag by ``http://localhost:8080/recipes/search?tag=mytag``.
