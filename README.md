@@ -103,3 +103,6 @@ Get a list of recipes by ``http://localhost:8080/recipes``. Or using ``cURL``:
 curl -s --location --request GET 'http://localhost:8080/recipes' \
 --header 'Content-Type: application/json'
 ``` 
+
+### PUTting a recipe to update its state
+Put a recipe by ``http://localhost:8080/reciepes/{id}``.
