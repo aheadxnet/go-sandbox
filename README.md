@@ -105,4 +105,11 @@ curl -s --location --request GET 'http://localhost:8080/recipes' \
 ``` 
 
 ### PUTting a recipe to update its state
-Put a recipe by ``http://localhost:8080/reciepes/{id}``.
+Put a recipe by ``http://localhost:8080/recipes/{id}``.
+
+### DELETEing a recipe
+Delete a recipe by ``http://localhost:8080/recipes/{id}``.
+```
+curl -v -sX DELETE http://localhost:8080/recipes/c0283p3d0cvuglq85log | jq -r
+```
+    
