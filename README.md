@@ -115,3 +115,30 @@ curl -v -sX DELETE http://localhost:8080/recipes/c0283p3d0cvuglq85log | jq -r
 
 ### GETting all recipes with a given tag
 Searching for recipes with a given tag by ``http://localhost:8080/recipes/search?tag=mytag``.
+
+## Documenting the API with swagger
+
+Get the latest release of ``go-swagger`` to work with. There are binaries for several OSses, choose the one meeting 
+your environment.
+
+### For Linux-style OS:
+Copy the binary to a folder of your liking and place a symlink in ``/usr/local/bin``:
+```
+ln -s /opt/go-swagger/current/go-swagger /usr/local/bin/swagger
+```
+You might have to do this as ``root`` or by ``sudo``-ing it.
+
+To generate the documentation use 
+```
+swagger generate spec -o ./swagger.json
+```
+in the projects root directory.
+
+And you can serve this as with
+```
+swagger serve ./swagger.json
+```
+Or in Swagger UI look
+```
+swagger serve -F swagger ./swagger.json
+```
