@@ -16,7 +16,7 @@ MONGO_DB_PID_FILE="${BASE_DIR}/.mongodb.pid"
 
 function showUsage() {
   echo "Script to help starting and stopping Mongo-DB Docker container"
-  echo "Usage: $0 [start|stop|clean]"
+  echo "Usage: $0 [start|stop|clean|prefill]"
 }
 
 if [ $# -lt 1 ]; then
@@ -37,7 +37,7 @@ function startContainer() {
     # Start mit fixem Passwort:
     MONGO_DB_PASSWORD="$(cat ${BASE_DIR}/run/secrets/mongodb_password)"
 
-    MONGO_DB_PID="$(docker run -d --name ${MONGO_DB_NAME} -v "${BASE_DIR}/data" -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=${MONGO_DB_PASSWORD} -p 27017:27017 mongo:5.0.6)"
+    MONGO_DB_PID="$(docker run -d --name ${MONGO_DB_NAME} -v "${BASE_DIR}/data:/data/db" -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=${MONGO_DB_PASSWORD} -p 27017:27017 mongo:4.4.3)"
 
     # Start mit Passwort aus docker secret file
     # Anlegen des Passwortes mit
@@ -76,6 +76,13 @@ function cleanContainer() {
   echo "Removed container ${MONGO_DB_NAME}."
 }
 
+function prefillDatabase() {
+  # Start mit fixem Passwort:
+  MONGO_DB_PASSWORD="$(cat ${BASE_DIR}/run/secrets/mongodb_password)"
+  # Daten initialisieren - damit wir auch was zum Testen haben
+  mongoimport --username admin --password "${MONGO_DB_PASSWORD}" --authenticationDatabase admin --db demo --collection recipes --file "${BASE_DIR}/recipes.json" --jsonArray
+}
+
 case "$1" in
   "start")
     startContainer
@@ -85,6 +92,9 @@ case "$1" in
     ;;
   "clean")
     cleanContainer
+    ;;
+  "prefill")
+    prefillDatabase
     ;;
   *)
     showUsage
