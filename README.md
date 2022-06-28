@@ -254,3 +254,166 @@ Up until now we stored everything in the file ```main.go```, which is OK for sta
 larger projects.
 
 So how do we structure a _go_ project?
+
+Basically we will separate the model and the handler code.
+
+#### Separating the ```model```
+
+Move the ```Recipe``` struct to a new folder named ```models```.
+
+```
+package models
+
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"time"
+)
+
+// swagger:model Recipe
+// A recipe used in this application.
+type Recipe struct {
+	// the id for this recipe
+	//
+	// required: true
+	// min: 1
+	ID primitive.ObjectID `json:"id" bson:"_id"`
+
+	// the name for this recipe
+	// required: true
+	// min length: 3
+	Name string `json:"name" bson:"name"`
+
+	// tags for this recipe
+	Tags []string `json:"tags" bson:"tags"`
+
+	// ingredients for this recipe
+	Ingredients []string `json:"ingredients" bson:"ingredients"`
+
+	// instructions for preparing this recipe
+	Instructions []string `json:"instructions" bson:"instructions"`
+
+	// the publication date for this recipe
+	// required: true
+	PublishedAt time.Time `json:"publishedAt" bson:"publishedAt"`
+}
+```
+
+#### Placing all handlers in ```handlers```
+
+All _handlers_ go into a package named ```handlers```, though we only have one, yet.
+
+```
+package handlers
+
+import (
+	"context"
+	"fmt"
+	"github.com/aheadxnet/go-sandbox/models"
+	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"net/http"
+	"time"
+)
+
+type RecipesHandler struct {
+	collection *mongo.Collection
+	ctx        context.Context
+}
+
+func NewRecipesHandler(ctx context.Context, collection *mongo.Collection) *RecipesHandler {
+	return &RecipesHandler{
+		collection: collection,
+		ctx:        ctx,
+	}
+}
+```
+
+> We create a struct for the collection and the context, so we don't have those as global variables anymore.
+
+```
+// swagger:operation POST /recipes recipes newRecipe
+// Create a new recipe
+// ---
+// parameters:
+// - in: body
+//   description: data for the new recipe
+//   required: true
+//   type: Recipe
+// produces:
+// - application/json
+// responses:
+//     '200':
+//         description: Successful operation
+//     '400':
+//         description: Invalid input
+func (handler *RecipesHandler) NewRecipeHandler(ctx *gin.Context) {
+	var recipe models.Recipe
+	if err := ctx.ShouldBindJSON(&recipe); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error()})
+		return
+	}
+	recipe.ID = primitive.NewObjectID()
+	recipe.PublishedAt = time.Now()
+	_, err := handler.collection.InsertOne(ctx, recipe)
+	if err != nil {
+		fmt.Println(err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error while inserting a new recipe"})
+		return
+	}
+	ctx.JSON(http.StatusCreated, recipe)
+}
+```
+> Then we move all the handler functions from main to the newly created ```handler.go```.
+> These functions now become members of the ```RecipesHandler``` class, so they have access
+> to the internal state of the handler - means: they can access the collection.
+
+#### Bringing it all together in ```main.go```
+
+The ```main.go``` file now becomes much smaller and cleaner. There is only some initialization code, that's all.
+
+```
+package main
+
+import (
+	"context"
+	"github.com/aheadxnet/go-sandbox/handlers"
+	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"log"
+	"os"
+)
+
+var recipesHandler *handlers.RecipesHandler
+
+func init() {
+	ctx := context.Background()
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGO_URI")))
+	if err = client.Ping(context.TODO(), readpref.Primary()); err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Connected to MongoDB")
+	collection := client.Database(os.Getenv("MONGO_DATABASE")).Collection("recipes")
+
+	recipesHandler = handlers.NewRecipesHandler(ctx, collection)
+}
+
+func main() {
+	router := gin.Default()
+	router.POST("/recipes", recipesHandler.NewRecipeHandler)
+	router.GET("/recipes", recipesHandler.ListRecipesHandler)
+	router.PUT("/recipes/:id", recipesHandler.UpdateRecipeHandler)
+	router.DELETE("/recipes/:id", recipesHandler.DeleteRecipeHandler)
+	router.GET("/recipes/:id", recipesHandler.GetRecipeHandler)
+	/*
+		router.GET("/recipes/search", SearchRecipesHandler)*/
+	router.Run()
+}
+```
+
+Only the ```init()``` function and the ```main()``` function are kept in the file (and some imports, of course).
+Doesn't this look neat?
