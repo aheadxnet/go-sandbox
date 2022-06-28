@@ -417,3 +417,299 @@ func main() {
 
 Only the ```init()``` function and the ```main()``` function are kept in the file (and some imports, of course).
 Doesn't this look neat?
+
+## Performance issues? Use caching!
+
+To show how easy it is to introduce fast caching mechanism into the project we will use [Redis](https://redis.io/).
+
+Redis is an in-memory database, everything is stored in the main memory - so it is easily and fast accessed.
+
+To start redis in a docker container run the following command.
+
+```
+docker run -d --name redis -p 6379:6379 redis
+```
+
+For production scenarios consider using adjusted configuration values, to be placed in a file named ```redis.conf```, for example.
+
+```
+maxmemory-policy allkeys-lru
+maxmemory 512mb
+```
+
+Then you create and start the container with
+
+```
+docker run -d -v $PWD/conf:/usr/local/etc/redis --name redis -p 6379:6379 redis
+```
+
+To access the redis cache from within the application get the driver first.
+
+```
+go get github.com/go-redis/redis/v8
+```
+
+Add an import to ```main.go``` like
+
+``` 
+import redis "github.com/go-redis/redis/v8"
+```
+
+Now you can add the following initialization code in the ```ini()``` function.
+
+``` 
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
+	status := redisClient.Ping(ctx)
+	fmt.Println(status)
+```
+
+Try starting the application now, it should run (without using the cache yet).
+
+> If go complains about some libs being declared "explicit" in go.mod and not in ```vendor/modules.txt```,
+> try fixing this with ```go mod vendor``` as may be suggested by go itself.
+
+Now we can add the ```redisClient``` to the ```RecipesHandler``` class.
+
+``` 
+type RecipesHandler struct {
+	collection  *mongo.Collection
+	ctx         context.Context
+	redisClient *redis.Client
+}
+
+func NewRecipesHandler(ctx context.Context, collection *mongo.Collection, redisClient *redis.Client) *RecipesHandler {
+	return &RecipesHandler{
+		collection:  collection,
+		ctx:         ctx,
+		redisClient: redisClient,
+	}
+}
+```
+
+Now we can optimize the handler function to retrieve all recipes.
+
+``` 
+func (handler *RecipesHandler) ListRecipesHandler(ctx *gin.Context) {
+	val, err := handler.redisClient.Get(ctx, "recipes").Result()
+	if err == redis.Nil {
+		log.Printf("Request to MongoDB")
+		cur, err := handler.collection.Find(handler.ctx,
+			bson.M{})
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError,
+				gin.H{"error": err.Error()})
+			return
+		}
+		defer cur.Close(handler.ctx)
+		recipes := make([]models.Recipe, 0)
+		for cur.Next(handler.ctx) {
+			var recipe models.Recipe
+			cur.Decode(&recipe)
+			recipes = append(recipes, recipe)
+		}
+		data, _ := json.Marshal(recipes)
+		handler.redisClient.Set(ctx, "recipes", string(data), 0)
+		ctx.JSON(http.StatusOK, recipes)
+	} else if err != nil {
+		ctx.JSON(http.StatusInternalServerError,
+			gin.H{"error": err.Error()})
+		return
+	} else {
+		log.Printf("Request to Redis")
+		recipes := make([]models.Recipe, 0)
+		json.Unmarshal([]byte(val), &recipes)
+		ctx.JSON(http.StatusOK, recipes)
+	}
+}
+```
+
+If you want to check of the redis cache works as designed you can look up the ```recipes``` entry in the container.
+
+``` 
+$ docker exec -it redis bash
+root@5035bb0e864d:/data# redis-cli 
+127.0.0.1:6379> EXISTS recipes
+(integer) 1
+127.0.0.1:6379> EXISTS blubb
+(integer) 0
+127.0.0.1:6379> exit
+root@5035bb0e864d:/data# exit
+exit
+```
+
+This issued command should return 1 for an existing entry (recipes) and 0 for a non existing one (blubb).
+
+> To get even more insight you can use [Redis Insight](https://redislabs.com/fr/redis-enterprise/redis-insight/), 
+> start a docker container with with redis insight via
+> ```docker run -d --name redisinsight --link redis -p 8001:8001 redislabs/redisinsight```.
+> Now you can connect this (Host: redis, default port 6379, database local, no username and no password)
+> to your redis db container.
+
+Two things have to be considered with using a cache:
+1. How long do you wish to read the cached value from the cache? We should use a TTL (time to live) parameter for taht scenario.
+2. If we add or update a value in the Database we should invalidate or delete the cached value to prevent reading an outdated state from the cache.
+
+So the ```NewRecipeHandler``` functionshould look something like this.
+
+``` 
+func (handler *RecipesHandler) NewRecipeHandler(ctx *gin.Context) {
+	var recipe models.Recipe
+	if err := ctx.ShouldBindJSON(&recipe); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error()})
+		return
+	}
+	recipe.ID = primitive.NewObjectID()
+	recipe.PublishedAt = time.Now()
+	_, err := handler.collection.InsertOne(ctx, recipe)
+	if err != nil {
+		fmt.Println(err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error while inserting a new recipe"})
+		return
+	}
+	log.Println("Remove data from Redis")
+	handler.redisClient.Del(ctx, "recipes")
+	ctx.JSON(http.StatusCreated, recipe)
+}
+```
+
+### Analyzing the cache with a benchmark
+
+Using [Apache Benchmark](https://httpd.apache.org/docs/2.4/programs/ab.html) you can test the performance with for example 100 requests in parallel and 2000 requests total.
+
+Without cache:
+
+``` 
+ab -n 2000 -c 100 -g without-cache.data http://localhost:8080/recipes
+This is ApacheBench, Version 2.3 <$Revision: 1843412 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking localhost (be patient)
+Completed 200 requests
+Completed 400 requests
+Completed 600 requests
+Completed 800 requests
+Completed 1000 requests
+Completed 1200 requests
+Completed 1400 requests
+Completed 1600 requests
+Completed 1800 requests
+Completed 2000 requests
+Finished 2000 requests
+
+
+Server Software:        
+Server Hostname:        localhost
+Server Port:            8080
+
+Document Path:          /recipes
+Document Length:        679602 bytes
+
+Concurrency Level:      100
+Time taken for tests:   12.159 seconds
+Complete requests:      2000
+Failed requests:        0
+Total transferred:      1359410000 bytes
+HTML transferred:       1359204000 bytes
+Requests per second:    164.49 [#/sec] (mean)
+Time per request:       607.929 [ms] (mean)
+Time per request:       6.079 [ms] (mean, across all concurrent requests)
+Transfer rate:          109186.17 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    0   1.4      0      14
+Processing:    28  592 308.7    556    1830
+Waiting:       26  580 299.6    547    1829
+Total:         29  593 309.1    556    1830
+
+Percentage of the requests served within a certain time (ms)
+  50%    556
+  66%    679
+  75%    778
+  80%    830
+  90%    996
+  95%   1165
+  98%   1393
+  99%   1441
+ 100%   1830 (longest request)
+```
+
+With cache:
+
+```
+ab -n 2000 -c 100 -g with-cache.data http://localhost:8080/recipes
+This is ApacheBench, Version 2.3 <$Revision: 1843412 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking localhost (be patient)
+Completed 200 requests
+Completed 400 requests
+Completed 600 requests
+Completed 800 requests
+Completed 1000 requests
+Completed 1200 requests
+Completed 1400 requests
+Completed 1600 requests
+Completed 1800 requests
+Completed 2000 requests
+Finished 2000 requests
+
+
+Server Software:        
+Server Hostname:        localhost
+Server Port:            8080
+
+Document Path:          /recipes
+Document Length:        679602 bytes
+
+Concurrency Level:      100
+Time taken for tests:   9.026 seconds
+Complete requests:      2000
+Failed requests:        0
+Total transferred:      1359410000 bytes
+HTML transferred:       1359204000 bytes
+Requests per second:    221.59 [#/sec] (mean)
+Time per request:       451.292 [ms] (mean)
+Time per request:       4.513 [ms] (mean, across all concurrent requests)
+Transfer rate:          147083.02 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    0   0.7      0       4
+Processing:    22  441 304.0    390    1960
+Waiting:       21  434 301.7    384    1791
+Total:         22  441 304.1    390    1960
+
+Percentage of the requests served within a certain time (ms)
+  50%    390
+  66%    530
+  75%    632
+  80%    696
+  90%    857
+  95%    989
+  98%   1191
+  99%   1360
+ 100%   1960 (longest request)
+```
+
+To visually compare those two tests you can use ```gnuplot```.
+1. Add a file ```apache-benchmark.p``` with
+```
+set terminal png
+set output "benchmark.png"
+set title "Cache benchmark"
+set size 1,0.7
+set grid y
+set xlabel "request"
+set ylabel "response time (ms)"
+plot "with-cache.data" using 9 smooth sbezier with lines title "with cache", "without-cache.data" using 9 smooth sbezier with lines title "without cache"
+```
+2. Create the image with ```gnuplot apache-benchmark.p```.
+
